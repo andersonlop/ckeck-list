@@ -15,6 +15,11 @@ class TarefaController extends Controller
         return view('tarefas.index', compact('tarefas'));
     }
 
+    public function show(Tarefa $tarefa)
+    {
+        return view('tarefas.show', compact('tarefa'));
+    }
+
     public function create()
     {
         $modulos = Modulo::all();
@@ -60,9 +65,15 @@ class TarefaController extends Controller
 
     public function destroy(Tarefa $tarefa)
     {
+        if ($tarefa->status !== 'pendente') {
+            return redirect()->route('tarefas.index')
+                ->with('error', 'Apenas tarefas com status pendente podem ser excluídas.');
+        }
+
         $tarefa->delete();
 
-        return redirect()->route('tarefas.index')->with('success', 'Tarefa excluída com sucesso.');
+        return redirect()->route('tarefas.index')
+            ->with('success', 'Tarefa excluída com sucesso.');
     }
 
     public function getCategorias(Request $request)
