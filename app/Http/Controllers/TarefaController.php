@@ -6,18 +6,16 @@ use App\Models\Tarefa;
 use App\Models\Modulo;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TarefaController extends Controller
 {
     public function index()
     {
-        $tarefas = Tarefa::with(['modulo', 'categoria'])->get();
+        $tarefas = Tarefa::with(['modulo', 'categoria'])
+            ->where('user_id', Auth::id())
+            ->get();
         return view('tarefas.index', compact('tarefas'));
-    }
-
-    public function show(Tarefa $tarefa)
-    {
-        return view('tarefas.show', compact('tarefa'));
     }
 
     public function create()
@@ -37,13 +35,21 @@ class TarefaController extends Controller
 
         $tarefa = new Tarefa($request->all());
         $tarefa->status = 'pendente';
+        $tarefa->user_id = Auth::id();
         $tarefa->save();
 
         return redirect()->route('tarefas.index')->with('success', 'Tarefa criada com sucesso.');
     }
 
+    public function show(Tarefa $tarefa)
+    {
+        $this->authorize('view', $tarefa);
+        return view('tarefas.show', compact('tarefa'));
+    }
+
     public function edit(Tarefa $tarefa)
     {
+        $this->authorize('update', $tarefa);
         $modulos = Modulo::all();
         $categorias = Categoria::where('modulo_id', $tarefa->modulo_id)->get();
         return view('tarefas.edit', compact('tarefa', 'modulos', 'categorias'));
@@ -51,11 +57,13 @@ class TarefaController extends Controller
 
     public function update(Request $request, Tarefa $tarefa)
     {
+        $this->authorize('update', $tarefa);
         $request->validate([
             'titulo' => 'required|string|max:255',
             'descricao' => 'required|string',
             'modulo_id' => 'required|exists:modulos,id',
             'categoria_id' => 'required|exists:categorias,id',
+            'status' => 'required|in:pendente,em_andamento,concluida',
         ]);
 
         $tarefa->update($request->all());
@@ -65,6 +73,7 @@ class TarefaController extends Controller
 
     public function destroy(Tarefa $tarefa)
     {
+        $this->authorize('delete', $tarefa);
         if ($tarefa->status !== 'pendente') {
             return redirect()->route('tarefas.index')
                 ->with('error', 'Apenas tarefas com status pendente podem ser excluídas.');

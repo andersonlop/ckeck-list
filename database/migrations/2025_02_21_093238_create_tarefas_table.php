@@ -15,12 +15,16 @@ return new class extends Migration
             $table->foreignId('modulo_id')->constrained()->onDelete('cascade');
             $table->foreignId('categoria_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['pendente', 'em_andamento', 'concluida'])->default('pendente');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('tarefas');
+        Schema::table('tarefas', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
+        });
     }
 };

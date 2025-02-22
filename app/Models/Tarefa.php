@@ -9,7 +9,7 @@ class Tarefa extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['titulo', 'descricao', 'modulo_id', 'categoria_id', 'status'];
+    protected $fillable = ['titulo', 'descricao', 'modulo_id', 'categoria_id', 'status', 'user_id'];
 
     public function modulo()
     {
@@ -19,5 +19,10 @@ class Tarefa extends Model
     public function categoria()
     {
         return $this->belongsTo(Categoria::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
